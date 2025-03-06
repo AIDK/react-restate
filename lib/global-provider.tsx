@@ -36,8 +36,10 @@ export const GlobalContextProvider = ({
     <GlobalContext.Provider
       value={{
         isLoggedIn,
+        //@ts-ignore
         user,
         loading,
+        //@ts-ignore
         refetch,
       }}
     >
