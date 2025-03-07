@@ -4,6 +4,7 @@
   Client,
   Databases,
   OAuthProvider,
+  Query,
 } from "react-native-appwrite";
 import * as Linking from "expo-linking";
 import { openAuthSessionAsync } from "expo-web-browser";
@@ -101,5 +102,65 @@ export async function getCurrentUser() {
   } catch (e) {
     console.error(e);
     return null;
+  }
+}
+
+export async function getFeaturedProperties() {
+  try {
+    const result = await databases.listDocuments(
+      config.databaseId,
+      config.propertiesCollectionId,
+      [Query.orderAsc("$createdAt"), Query.limit(5)],
+    );
+
+    return result.documents;
+  } catch (error) {
+    console.error(error);
+    return [];
+  }
+}
+
+export async function getProperties({
+  filter,
+  searchQuery,
+  limit,
+}: {
+  filter: string;
+  searchQuery: string;
+  limit?: number;
+}) {
+  try {
+    const buildQuery = [Query.orderDesc("$createdAt")];
+
+    if (filter && filter !== "All") {
+      buildQuery.push(Query.equal("type", filter));
+    }
+
+    // searching can be done on either property name, address or type
+    if (searchQuery) {
+      buildQuery.push(
+        Query.or([
+          Query.search("name", searchQuery),
+          Query.search("address", searchQuery),
+          Query.search("type", searchQuery),
+        ]),
+      );
+    }
+
+    // if limit was provided we limit result
+    if (limit) {
+      buildQuery.push(Query.limit(limit));
+    }
+
+    const result = await databases.listDocuments(
+      config.databaseId,
+      config.propertiesCollectionId,
+      buildQuery, // pass our custom constructed query
+    );
+
+    return result.documents;
+  } catch (e) {
+    console.error(e);
+    return [];
   }
 }

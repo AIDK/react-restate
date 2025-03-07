@@ -1,4 +1,5 @@
 import {
+  ActivityIndicator,
   Button,
   FlatList,
   Image,
@@ -13,6 +14,11 @@ import { Card, FeaturedCard } from "@/components/Cards";
 import Filters from "@/components/Filters";
 import { useGlobalContext } from "@/lib/global-provider";
 import { useEffect, useState } from "react";
+import { router, useLocalSearchParams } from "expo-router";
+import { useAppwrite } from "@/lib/useAppwrite";
+import { getFeaturedProperties, getProperties } from "@/lib/appwrite";
+import NoResults from "@/components/NoResults";
+import seed from "@/lib/seed";
 
 function getGreeting(): string {
   const now = new Date();
@@ -24,13 +30,43 @@ function getGreeting(): string {
 }
 
 export default function Index() {
-  const { user } = useGlobalContext();
   const [greeting, setGreeting] = useState(getGreeting());
+  const { user } = useGlobalContext();
+  const params = useLocalSearchParams<{ query?: string; filter?: string }>();
 
+  const { data: featuredProperties, loading: featuredPropertiesLoading } =
+    useAppwrite({ fn: getFeaturedProperties });
+
+  const {
+    data: properties,
+    loading: propertiesLoading,
+    refetch,
+  } = useAppwrite({
+    fn: getProperties,
+    params: {
+      filter: params.filter!,
+      searchQuery: params.query!,
+      limit: 8,
+    },
+    skip: true,
+  });
+
+  const handleCardPress = (id: string) => router.push(`/properties/${id}`);
+
+  // reload data when filters change, etc.
+  useEffect(() => {
+    refetch({
+      filter: params.filter!,
+      searchQuery: params.query!,
+      limit: 7,
+    });
+  }, [params.filter, params.query]);
+
+  // update greeting every minute
   useEffect(() => {
     const interval = setInterval(() => {
       setGreeting(getGreeting());
-    }, 60000); // update every 1 min
+    }, 60000);
 
     // stop interval when this component unmounts
     return () => clearInterval(interval);
@@ -38,15 +74,28 @@ export default function Index() {
 
   return (
     <SafeAreaView className={"bg-white h-full"}>
+      {/* <Button title={"Seed"} onPress={seed} /> */}
       {/* Recommended Cards */}
       <FlatList
-        data={[1, 2, 3, 4, 5]}
-        renderItem={({ item }) => <Card />}
-        keyExtractor={(item) => item.toString()}
+        data={properties}
         numColumns={2}
+        renderItem={({ item }) => (
+          <Card item={item} onPress={() => handleCardPress(item.$id)} />
+        )}
+        keyExtractor={(item) => item.$id}
         contentContainerClassName={"pb-32"}
         columnWrapperClassName={"flex gap-5 px-5"}
         showsHorizontalScrollIndicator={false}
+        ListEmptyComponent={
+          propertiesLoading ? (
+            <ActivityIndicator
+              size={"large"}
+              className={"text-primary-300 mt-5"}
+            />
+          ) : (
+            <NoResults />
+          )
+        }
         ListHeaderComponent={
           <View className={"px-5"}>
             <View className={"flex flex-row items-center justify-between mt-5"}>
@@ -86,16 +135,31 @@ export default function Index() {
                   </Text>
                 </TouchableOpacity>
               </View>
+
               {/* Featured Cards (forms part of the header section of the main flat list) */}
-              <FlatList
-                data={[10, 11, 12, 13]}
-                renderItem={({ item }) => <FeaturedCard />}
-                keyExtractor={(item) => item.toString()}
-                horizontal
-                bounces={false}
-                showsHorizontalScrollIndicator={false}
-                contentContainerClassName={"flex gap-5 mt-5"}
-              />
+              {featuredPropertiesLoading ? (
+                <ActivityIndicator
+                  size={"large"}
+                  className={"text-primary-300"}
+                />
+              ) : !featuredProperties || featuredProperties.length === 0 ? (
+                <NoResults />
+              ) : (
+                <FlatList
+                  data={featuredProperties}
+                  renderItem={({ item }) => (
+                    <FeaturedCard
+                      item={item}
+                      onPress={() => handleCardPress(item.$id)}
+                    />
+                  )}
+                  keyExtractor={(item) => item.$id}
+                  horizontal
+                  bounces={false}
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerClassName={"flex gap-5 mt-5"}
+                />
+              )}
             </View>
             {/* Recommendations Heading*/}
             <View className={"flex flex-row items-center justify-between"}>

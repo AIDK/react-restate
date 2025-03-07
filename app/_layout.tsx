@@ -3,6 +3,7 @@ import "./globals.css";
 import { useFonts } from "expo-font";
 import { useEffect } from "react";
 import GlobalProvider from "@/lib/global-provider";
+import React from "react";
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
