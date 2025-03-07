@@ -1,14 +1,41 @@
-import { FlatList, Image, Text, TouchableOpacity, View } from "react-native";
+import {
+  Button,
+  FlatList,
+  Image,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import images from "@/constants/images";
 import icons from "@/constants/icons";
 import Search from "@/components/Search";
 import { Card, FeaturedCard } from "@/components/Cards";
 import Filters from "@/components/Filters";
 import { useGlobalContext } from "@/lib/global-provider";
+import { useEffect, useState } from "react";
+
+function getGreeting(): string {
+  const now = new Date();
+  const hours = now.getHours();
+
+  if (hours < 12) return "Good Morning";
+  if (hours > 12 && hours < 18) return "Good Afternoon";
+  return "Good Evening";
+}
 
 export default function Index() {
   const { user } = useGlobalContext();
+  const [greeting, setGreeting] = useState(getGreeting());
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setGreeting(getGreeting());
+    }, 60000); // update every 1 min
+
+    // stop interval when this component unmounts
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <SafeAreaView className={"bg-white h-full"}>
       {/* Recommended Cards */}
@@ -32,7 +59,7 @@ export default function Index() {
                   className={"flex flex-col items-start ml-2 justify-center"}
                 >
                   <Text className={"text-xs font-rubik text-black-100"}>
-                    Good Morning
+                    {greeting}
                   </Text>
                   <Text
                     className={"text-base font-rubik-medium text-black-300"}
