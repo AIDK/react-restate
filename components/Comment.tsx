@@ -14,15 +14,21 @@ function Comment({ item }: Props) {
           source={{ uri: item.avatar }}
           className={"size-14 rounded-full"}
         />
-        <Text>{item.name}</Text>
+        <Text
+          className={"text-base text-black-300 text-start font-rubik-bold ml-3"}
+        >
+          {item.name}
+        </Text>
       </View>
 
       <Text className={"text-black-200 text-base font-rubik mt-2"}>
         {item.review}
       </Text>
 
-      <View>
-        <View>
+      <View
+        className={"flex flex-row items-center w-full justify-between mt-4"}
+      >
+        <View className={"flex flex-row items-center"}>
           <Image
             source={icons.heart}
             className={"size-5"}

@@ -6,6 +6,7 @@
   Dimensions,
   TouchableOpacity,
   Platform,
+  FlatList,
 } from "react-native";
 import React from "react";
 import { router, useLocalSearchParams } from "expo-router";
@@ -14,6 +15,7 @@ import icons from "@/constants/icons";
 import { useAppwrite } from "@/lib/useAppwrite";
 import { getPropertyById } from "@/lib/appwrite";
 import { facilities } from "@/constants/data";
+import Comment from "@/components/Comment";
 
 const Property = () => {
   // gets the 'id' from the route parameter
@@ -53,7 +55,7 @@ const Property = () => {
           {/* Back, Heart and Email */}
           <View
             className={"z-50 absolute inset-x-7"}
-            style={{ top: Platform.OS === "ios" ? "70" : "30" }}
+            style={{ top: Platform.OS === "ios" ? 70 : 20 }}
           >
             <View
               className={"flex flex-row items-center w-full justify-between"}
@@ -232,9 +234,106 @@ const Property = () => {
           </View>
 
           {/* Gallery Detail */}
+          {property?.gallery.length > 0 && (
+            <View className={"mt-7"}>
+              <Text className={"text-black-300 text-xl font-rubik-bold"}>
+                Gallery
+              </Text>
+              <FlatList
+                contentContainerStyle={{ paddingRight: 20 }}
+                data={property?.gallery}
+                keyExtractor={(item) => item.$id}
+                horizontal
+                bounces={false}
+                showsHorizontalScrollIndicator={false}
+                renderItem={({ item }) => (
+                  <Image
+                    source={{ uri: item.image }}
+                    className={"size-40 rounded-xl"}
+                  />
+                )}
+                contentContainerClassName={"flex gap-4 mt-3"}
+              />
+            </View>
+          )}
+
+          {/* Property Address */}
+          <View className={"mt-7"}>
+            <Text className={"text-black-300 text-xl font-rubik-bold"}>
+              Location
+            </Text>
+          </View>
+          <View
+            className={"flex flex-row items-center justify-start mt-4 gap-2"}
+          >
+            <Image source={icons.location} className={"w-7 h-7"} />
+            <Text>{property?.address}</Text>
+          </View>
+          <Image
+            source={images.map}
+            className={"h-52 w-full mt-5 rounded-xl"}
+          />
+
+          {/* User Reviews */}
+          {property?.reviews.length > 0 && (
+            <View className={"mt-7"}>
+              <View className={"flex flex-row items-center justify-between"}>
+                <View className={"flex flex-row items-center"}>
+                  <Image source={icons.star} className={"size-6"} />
+                  <Text
+                    className={"text-black-300 text-xl font-rubik-bold ml-2"}
+                  >
+                    {property?.rating} ({property?.reviews.length} reviews)
+                  </Text>
+                </View>
+
+                <TouchableOpacity>
+                  <Text
+                    className={"text-primary-300 text-base font-rubik-bold"}
+                  >
+                    View All
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              <View className={"mt-5"}>
+                <Comment item={property?.reviews[0]} />
+              </View>
+            </View>
+          )}
         </View>
       </ScrollView>
+
+      <View
+        className={
+          "absolute bg-white bottom-0 w-full rounded-t-2xl  border-t border-r border-l border-primary-200 p-7"
+        }
+      >
+        <View className={"flex flex-row items-center justify-between gap-10"}>
+          <View className={"flex flex-col items-start"}>
+            <Text className={"text-black-200 text-xs font-rubik-medium"}>
+              Price
+            </Text>
+            <Text
+              numberOfLines={1}
+              className={"text-primary-300 text-start text-2xl font-rubik-bold"}
+            >
+              ${property?.price}
+            </Text>
+          </View>
+          <TouchableOpacity
+            className={
+              "bg-primary-300 flex-1 flex flex-row items-center justify-center py-3 rounded-full shadow-md shadow-zinc-400"
+            }
+          >
+            <Text className={"text-white text-lg text-center font-rubik-bold"}>
+              Book Now
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
     </View>
   );
 };
+
 export default Property;
